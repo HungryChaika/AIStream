@@ -16,18 +16,17 @@ device = "0" if torch.cuda.is_available() else "cpu"
 if device == "0":
     torch.cuda.set_device(0)
 
-def run(
-    weights="yolo11x.pt",
-    source="rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=9&subtype=1",
-    device="0",
-    view_img=True,
-    save_img=False,
-    exist_ok=False,
-    classes=None,
-    line_thickness=2,
-    track_thickness=2,
-    region_thickness=2,
-):
+weights="yolo11x.pt"
+source="rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=3&subtype=1"
+view_img=True
+save_img=False
+exist_ok=False
+classes=None
+line_thickness=2
+track_thickness=2
+region_thickness=2
+
+def main():
     
     vid_frame_count = 0
 
@@ -52,6 +51,8 @@ def run(
             break
         vid_frame_count += 1
 
+        frame = cv2.resize(frame, (int(frame_width * 0.25), int(frame_height * 0.25)), interpolation=cv2.INTER_AREA)
+
         results = model.track(frame, persist=True, classes=classes)
 
         if results[0].boxes.id is not None:
@@ -69,7 +70,7 @@ def run(
                 if len(track) > 30:
                     track.pop(0)
                 points = np.hstack(track).astype(np.int32).reshape((-1, 1, 2))
-                cv2.polylines(frame, [points], isClosed=False, color=colors(cls, True), thickness=2)
+                cv2.polylines(frame, [points], isClosed=False, color=colors(cls, True), thickness=track_thickness)
 
         if view_img:
             if vid_frame_count == 1:
@@ -86,9 +87,6 @@ def run(
     video_writer.release()
     video_cap.release()
     cv2.destroyAllWindows()
-
-def main():
-    run()
 
 if __name__ == "__main__":
     main()
