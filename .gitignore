@@ -1,4 +1,5 @@
 venv/
+saved_streams/
 yolo11n.pt
 yolo11x.pt
 i.png
