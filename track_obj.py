@@ -16,7 +16,7 @@ device = "0" if torch.cuda.is_available() else "cpu"
 if device == "0":
     torch.cuda.set_device(0)
 
-weights="yolo11x.pt"
+weights="models/yolo11x.pt"
 
 #For little NetRegistrator. IP is 192.168.1.72
 stream_channel = {

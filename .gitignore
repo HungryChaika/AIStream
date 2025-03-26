@@ -1,5 +1,4 @@
 venv/
 saved_streams/
-yolo11n.pt
-yolo11x.pt
+models/
 i.png
