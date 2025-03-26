@@ -17,14 +17,39 @@ if device == "0":
     torch.cuda.set_device(0)
 
 weights="yolo11x.pt"
-source="rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=3&subtype=1"
+
+#For little NetRegistrator. IP is 192.168.1.72
+stream_channel = {
+    'fire_exit_imitif': "5",    #192.168.1.31
+    'angle_imitif': "1",        #192.168.1.35
+    'hallway_imitif': "7",      #192.168.1.37
+    'hall_imitif': "8",         #192.168.1.38
+    'street': "9",              #192.168.1.39
+    'hall_igz': "6",            #192.168.1.36
+    'hallway_igz': "3",         #192.168.1.34
+    'angle_igz': "4",           #192.168.1.32
+    'fire_exit_igz': "10",      #192.168.1.40
+    '301_6k': "2",              #192.168.1.33
+    '323_6k_window': "11",      #192.168.1.41
+    '323_6k_door': "12"         #192.168.1.42
+}
+stream_type = {
+    'main_stream': "0",
+    'sub_stream': "1"
+}
+
+key_stream_channel = '301_6k'
+key_stream_type = 'sub_stream'
+
+stream_params = f"channel={ stream_channel[key_stream_channel] }&subtype={ stream_type[key_stream_type] }"
+source=f"rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?{ stream_params }"
 view_img=True
 save_img=False
 exist_ok=False
 classes=None
 line_thickness=2
 track_thickness=2
-region_thickness=2
+resize_coeff=1
 
 def main():
     
@@ -41,17 +66,16 @@ def main():
     fps = int(video_cap.get(5))
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
 
-    save_dir = increment_path(Path("ultralytics_rc_output") / "exp", exist_ok)
+    save_dir = increment_path(Path("saved_streams") / "exp", exist_ok)
     save_dir.mkdir(parents=True, exist_ok=True)
-    video_writer = cv2.VideoWriter(str(save_dir / f"{Path(source).stem}.avi"), fourcc, fps, (frame_width, frame_height))
-
+    video_writer = cv2.VideoWriter(f"{save_dir}/{key_stream_channel}_{key_stream_type}.avi", fourcc, fps, (frame_width, frame_height))
     while video_cap.isOpened():
         success, frame = video_cap.read()
         if not success:
             break
         vid_frame_count += 1
 
-        frame = cv2.resize(frame, (int(frame_width * 0.25), int(frame_height * 0.25)), interpolation=cv2.INTER_AREA)
+        frame = cv2.resize(frame, (int(frame_width * resize_coeff), int(frame_height * resize_coeff)), interpolation=cv2.INTER_AREA)
 
         results = model.track(frame, persist=True, classes=classes)
 
