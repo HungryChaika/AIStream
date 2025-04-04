@@ -16,7 +16,7 @@ SOURCES = [ "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=9&s
             "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=2&subtype=1" ]
 
 
-def test(model_name, video_file):
+def test(model_name, video_file, nameWindow):
     track_history = defaultdict(list)
 
     device = "0" if torch.cuda.is_available() else "cpu"
@@ -62,11 +62,7 @@ def test(model_name, video_file):
                 cv2.polylines(frame, [points], isClosed=False, color=colors(cls, True), thickness=SETTINGS["track_thickness"])
 
         if SETTINGS["view_img"]:
-            nameWindow = "1"
-            if video_file == SOURCES[0]:
-                nameWindow = "channel_9_street"
-            else:
-                nameWindow = "channel_2_301_6k"
+            
             if vid_frame_count == 1:
                 cv2.namedWindow(nameWindow)
             cv2.imshow(nameWindow, frame)
@@ -76,18 +72,22 @@ def test(model_name, video_file):
 
     del vid_frame_count
     video_cap.release()
-    cv2.destroyAllWindows()
+    cv2.destroyWindow(nameWindow)
 
 
 
 
-# Create and start tracker threads using a for loop
 tracker_threads = []
+nameWindow = "1"
 for video_file, model_name in zip(SOURCES, MODEL_NAMES):
-    thread = threading.Thread(target=test, args=(model_name, video_file), daemon=True)
+    if video_file == SOURCES[0]:
+        nameWindow = "channel_9_street"
+    else:
+        nameWindow = "channel_2_301_6k"
+    thread = threading.Thread(target=test, args=(model_name, video_file, nameWindow), daemon=True)
     tracker_threads.append(thread)
     thread.start()
 
-# Wait for all tracker threads to finish
+
 for thread in tracker_threads:
     thread.join()
