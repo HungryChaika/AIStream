@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter.messagebox import showinfo
 import ctypes
 from video_capture import VideoCapture
+import PIL.ImageTk
+
 
 from sys import platform
 if platform == "win32":
@@ -9,38 +11,47 @@ if platform == "win32":
 
 
 class CameraTk(tk.Frame):
-    def __init__(self, window, text=None,sources_names=None, stream=None, callbacks = {}, width = 100, height = 100):
+    def __init__(self, window, text=None, stream=None, callbacks = {}, width = 100, height = 100):
         super().__init__(window, padx=5, pady=5, width=width, height=height, highlightbackground="#000000", highlightthickness=2)
         self.window = window
         self.stream = stream
-        self.sources_names = sources_names
         self.text = text
         self.callbacks = callbacks
         self.canvas = None
         self.video_capture = None
-        # self.width_video = width
-        # self.height_video = height
+
+
+        self.delay = None
+        self.image = None
+        self.running = True
+
+
+        self.width_video = width
+        self.height_video = height
         self.selected_name_cam = tk.StringVar()
         self.selected_name_cam.set("Выбор\nкамеры")
         self.grid_coords = {
             "x": None,
             "y": None
         }
-        # self.canvas = tk.Canvas(self, width=int(width * 0.9), height=int(height * 0.9))
-        # self.canvas.pack(anchor="center")
-        # self.canvas.bind('<Double-1>', lambda event: self.event_camera_to_fullscreen(event))
 
         # self.button_choice_of_stream = tk.Button(master=self, text="Выбор\nкамеры", command=lambda: self.event_choice_of_stream())
         # self.button_choice_of_stream.place(x=0, y=0, relx=0.5, rely=0.5, anchor="center")
-        self.option_menu = tk.OptionMenu(self, self.selected_name_cam, *self.sources_names, command=lambda choice: self.event_choice_of_stream(choice))
+        self.option_menu = tk.OptionMenu(self, self.selected_name_cam, *self.callbacks["get_source_names"](), command=lambda choice: self.event_choice_of_stream(choice))
         self.option_menu.place(x=0, y=0, relx=0.5, rely=0.5, anchor="center")
 
     # def event_choice_of_stream(self, event):
     def event_choice_of_stream(self, choice):
-        print(choice)
         address = self.callbacks["get_source_address"](choice)
-        print(address)
         self.option_menu.place_forget()
+        self.label = tk.Label(self, text=choice)
+        self.label.pack()
+        self.canvas = tk.Canvas(self, width=int(self.width_video * 0.9), height=int(self.height_video * 0.9))
+        self.canvas.pack(anchor="center")
+        self.canvas.bind('<Double-1>', lambda event: self.event_camera_to_fullscreen(event))
+        self.video_capture = VideoCapture(address, self.width_video, self.height_video)
+        self.delay = int(1000/self.video_capture.fps)
+        self.update_frame()
 
     def event_camera_to_fullscreen(self, event):
         self.callbacks["switch_camera_to_fullscreen"](self)
@@ -69,6 +80,16 @@ class CameraTk(tk.Frame):
     def resize_canvas(self, width, height):
         if self.canvas:
             self.canvas.configure(width=int(width * 0.9), height=int(height * 0.9))
+
+    def update_frame(self):
+        ret, frame = self.video_capture.get_frame()
+        if ret:
+            self.image = frame
+            self.photo = PIL.ImageTk.PhotoImage(image=self.image)
+            self.canvas.create_image(0, 0, image=self.photo, anchor='nw')
+        
+        if self.running:
+            self.window.after(self.delay, self.update_frame)
         
 
 class CamerasFrame(tk.Frame):
@@ -89,7 +110,8 @@ class CamerasFrame(tk.Frame):
             "swich_camera_to_grid": self.swich_camera_to_grid,
             "get_camera_sizes": self.get_camera_sizes,
             "get_parent_sizes": self.get_parent_sizes,
-            "get_source_address": self.get_source_address
+            "get_source_address": self.get_source_address,
+            "get_source_names": self.get_source_names
         }
 
     def spawn_cameras(self):
@@ -109,16 +131,11 @@ class CamerasFrame(tk.Frame):
                 try:
                     cam = self.cameras[index_select]
                 except:
-                    cam = CameraTk(sources_names=self.sources_names, window=self.sub_frame, callbacks=self.callbacks_for_cameras, width=width_cam, height=height_cam)
+                    cam = CameraTk(window=self.sub_frame, callbacks=self.callbacks_for_cameras, width=width_cam, height=height_cam)
                     self.cameras.append(cam)
                 cam.grid(row=i, column=j, sticky=tk.NSEW, padx=int(width*0.005), pady=int(height*0.005))
                 cam.set_grid_coords(j, i)
                 cam.configure(width=width_cam, height=height_cam)
-    
-    def get_source_address(self, source_name):
-        for name, address in self.sources:
-            if name == source_name:
-                return address
 
     def all_cameras_resize_canvas(self):
         width, height = self.get_camera_sizes()
@@ -148,6 +165,14 @@ class CamerasFrame(tk.Frame):
     
     def get_parent_sizes(self):
         return self.winfo_width(), self.winfo_height()
+    
+    def get_source_address(self, source_name):
+        for name, address in self.sources:
+            if name == source_name:
+                return address
+    
+    def get_source_names(self):
+        return self.sources_names
 
     def update_scene(self):
         grid = self.callbacks["get_current_grid"]()
@@ -242,8 +267,8 @@ class App(tk.Tk):
 
     def on_closing(self, event=None):
         print('[Application] stoping threads')
-        # for source in self.cameras_frame.cameras:
-        #     source.cameras.vid.running = False
+        for source in self.cameras_frame.cameras:
+            source.cameras.video_capture.running = False
         print('[Application] exit')
         self.destroy()
 
