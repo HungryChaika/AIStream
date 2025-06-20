@@ -1,8 +1,9 @@
 import tkinter as tk
 from tkinter.messagebox import showinfo
 import ctypes
-from video_capture import VideoCapture
+from video_capture import MyVideoCapture
 import PIL.ImageTk
+from settings_local import SETTINGS as s
 
 
 from sys import platform
@@ -19,13 +20,9 @@ class CameraTk(tk.Frame):
         self.callbacks = callbacks
         self.canvas = None
         self.video_capture = None
-
-
         self.delay = None
         self.image = None
         self.running = True
-
-
         self.width_video = width
         self.height_video = height
         self.selected_name_cam = tk.StringVar()
@@ -49,7 +46,7 @@ class CameraTk(tk.Frame):
         self.canvas = tk.Canvas(self, width=int(self.width_video * 0.9), height=int(self.height_video * 0.9))
         self.canvas.pack(anchor="center")
         self.canvas.bind('<Double-1>', lambda event: self.event_camera_to_fullscreen(event))
-        self.video_capture = VideoCapture(address, self.width_video, self.height_video)
+        self.video_capture = MyVideoCapture(address, self.width_video, self.height_video)
         self.delay = int(1000/self.video_capture.fps)
         self.update_frame()
 
@@ -78,6 +75,8 @@ class CameraTk(tk.Frame):
         self.grid_coords["y"] = y
 
     def resize_canvas(self, width, height):
+        if self.video_capture:
+            self.video_capture.set_frame_size(width, height)
         if self.canvas:
             self.canvas.configure(width=int(width * 0.9), height=int(height * 0.9))
 
@@ -214,7 +213,11 @@ class MenuFrame(tk.Frame):
         tk.OptionMenu(sub_frame_right, self.selected_size_grid, *self.grid_options, command=lambda choice: self.event_grid_change(choice)).grid(row=0, column=1, ipadx=10, ipady=10)
 
         #Placement of the func buttons
+        tk.Button(sub_frame_right, text="Новая камера", command=lambda: self.new_camera()).grid(row=0, column=2, ipadx=10, ipady=10, rowspan=2)
         # tk.Button(sub_frame_right, text="Добавить все камеры", command=lambda: self.call_all_camera()).grid(row=0, column=2, ipadx=10, ipady=10, rowspan=2)
+
+    def new_camera(self):
+        pass
 
     def event_grid_change(self, choice):
         self.selected_size_grid.set(choice)
@@ -231,8 +234,8 @@ class App(tk.Tk):
         super().__init__()
         self.sources = sources
         self.attributes("-fullscreen", True)
-        self.bind("<F11>", lambda event: self.iconify())
-        self.bind("<Escape>", lambda event: self.destroy())
+        self.bind(s["screen_resize"], lambda event: self.iconify())
+        self.bind(s["exit_Button"], lambda event: self.destroy())
         self.current_cameras_grid = 1
 
         self.callbacks_for_menu = {
@@ -253,7 +256,7 @@ class App(tk.Tk):
         self.cameras_frame.update()
         self.cameras_frame.spawn_cameras()
 
-        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.protocol("WM_DELETE_WINDOW", lambda: on_closing(self))
         self.mainloop()
 
     def set_current_grid(self, elem=1):
@@ -268,38 +271,36 @@ class App(tk.Tk):
     def on_closing(self, event=None):
         print('[Application] stoping threads')
         for source in self.cameras_frame.cameras:
-            source.cameras.video_capture.running = False
+            print(source, "\n!!!\n\n")
+            # source.cameras.video_capture.running = False
+            del source.video_capture
         print('[Application] exit')
         self.destroy()
 
-# sources = [
-#         ("first",       "#000000"),
-#         ("second",      "#FF0000"),
-#         ("third",       "#00FF00"),
-#         ("fourth",      "#0000FF"),
-#         ("fifth",       "#500050"),
-#         ("sixth",       "#FFFF00"),
-#         ("seventh",     "#00FFFF"),
-#         ("eighth",      "#FF00FF"),
-#         ("ninth",       "#800080"),
-#         ("tenth",       "#008000"),
-#         ("eleventh",    "#000080"),
-#         ("twelfth",     "#005500"),
-#     ]
+def on_closing(root):
+    print('[Application] stoping threads')
+    for source in root.cameras_frame.cameras:
+        print(source, "\n!!!\n\n")
+        # source.cameras.video_capture.running = False
+        del source.video_capture
+    print('[Application] exit')
+    root.destroy()
+
+
 sources = [
-        ('hallway_igz', "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=3&subtype=1"),        #192.168.1.34
-        ('fire_exit_imitif', "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=5&subtype=1"),   #192.168.1.31
-        ('angle_imitif', "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=1&subtype=1"),       #192.168.1.35
-        ('hallway_imitif', "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=7&subtype=1"),     #192.168.1.37
-        ('hall_imitif', "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=8&subtype=1"),        #192.168.1.38
-        ('street', "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=9&subtype=1"),             #192.168.1.39
-        ('hall_igz', "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=6&subtype=1"),           #192.168.1.36
-        ('angle_igz', "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=4&subtype=1"),          #192.168.1.32
-        ('fire_exit_igz', "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=10&subtype=1"),     #192.168.1.40
-        ('301_6k', "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=2&subtype=1"),             #192.168.1.33
-        ('323_6k_window', "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=11&subtype=1"),     #192.168.1.41
-        ('323_6k_door', "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=12&subtype=1")        #192.168.1.42
-    ]
+        ('hallway_igz',         "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["hallway_igz"],      s["stream_type"]["sub_stream"])),
+        ('fire_exit_imitif',    "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["fire_exit_imitif"], s["stream_type"]["sub_stream"])),
+        ('angle_imitif',        "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["angle_imitif"],     s["stream_type"]["sub_stream"])),
+        ('hallway_imitif',      "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["hallway_imitif"],   s["stream_type"]["sub_stream"])),
+        ('hall_imitif',         "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["hall_imitif"],      s["stream_type"]["sub_stream"])),
+        ('street',              "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["street"],           s["stream_type"]["sub_stream"])),
+        ('hall_igz',            "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["hall_igz"],         s["stream_type"]["sub_stream"])),
+        ('angle_igz',           "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["angle_igz"],        s["stream_type"]["sub_stream"])),
+        ('fire_exit_igz',       "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["fire_exit_igz"],    s["stream_type"]["sub_stream"])),
+        ('301_6k',              "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["301_6k"],           s["stream_type"]["sub_stream"])),
+        ('323_6k_window',       "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["323_6k_window"],    s["stream_type"]["sub_stream"])),
+        ('323_6k_door',         "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["323_6k_door"],      s["stream_type"]["sub_stream"]))
+]
 
 if __name__ == "__main__":
     application = App(sources=sources)

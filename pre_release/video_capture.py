@@ -3,7 +3,7 @@ import PIL.Image, PIL.ImageTk
 import time
 import threading
 
-class VideoCapture:
+class MyVideoCapture:
     def __init__(self, video_source=0, width=None, height=None, fps=None):
         self.video_source = video_source
         self.width = width
@@ -58,7 +58,7 @@ class VideoCapture:
         while self.running:
             ret, frame = self.vid.read()
             if ret:
-                frame = cv2.resize(frame, (self.width, self.height))
+                frame = cv2.resize(frame, (int(self.width), int(self.height)))
                 if self.recording:
                     self.record(frame)
                 if self.convert_pillow:
@@ -80,9 +80,13 @@ class VideoCapture:
     def get_frame(self):
         return self.ret, self.frame
     
+    def set_frame_size(self, w, h):
+        self.width = w
+        self.height = h
+    
     def __del__(self):
         if self.running:
             self.running = False
-            self.thread.join()
+        self.thread.join()
         if self.vid.isOpened():
             self.vid.release()
