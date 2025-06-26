@@ -84,9 +84,9 @@ class MyVideoCapture:
         self.width = w
         self.height = h
     
-    def __del__(self):
+    def off(self):
         if self.running:
             self.running = False
-        self.thread.join()
         if self.vid.isOpened():
             self.vid.release()
+        self.thread.join()

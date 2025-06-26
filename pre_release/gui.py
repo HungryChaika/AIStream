@@ -235,7 +235,7 @@ class App(tk.Tk):
         self.sources = sources
         self.attributes("-fullscreen", True)
         self.bind(s["screen_resize"], lambda event: self.iconify())
-        self.bind(s["exit_Button"], lambda event: self.destroy())
+        self.bind(s["exit_Button"], lambda event: self.on_closing())
         self.current_cameras_grid = 1
 
         self.callbacks_for_menu = {
@@ -256,7 +256,7 @@ class App(tk.Tk):
         self.cameras_frame.update()
         self.cameras_frame.spawn_cameras()
 
-        self.protocol("WM_DELETE_WINDOW", lambda: on_closing(self))
+        self.protocol("WM_DELETE_WINDOW", lambda: self.on_closing())
         self.mainloop()
 
     def set_current_grid(self, elem=1):
@@ -271,20 +271,10 @@ class App(tk.Tk):
     def on_closing(self, event=None):
         print('[Application] stoping threads')
         for source in self.cameras_frame.cameras:
-            print(source, "\n!!!\n\n")
-            # source.cameras.video_capture.running = False
-            del source.video_capture
+            if source.video_capture:
+                source.video_capture.off()
         print('[Application] exit')
         self.destroy()
-
-def on_closing(root):
-    print('[Application] stoping threads')
-    for source in root.cameras_frame.cameras:
-        print(source, "\n!!!\n\n")
-        # source.cameras.video_capture.running = False
-        del source.video_capture
-    print('[Application] exit')
-    root.destroy()
 
 
 sources = [
