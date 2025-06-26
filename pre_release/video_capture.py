@@ -85,8 +85,7 @@ class MyVideoCapture:
         self.height = h
     
     def off(self):
-        if self.running:
-            self.running = False
+        self.running = False
         if self.vid.isOpened():
             self.vid.release()
         self.thread.join()

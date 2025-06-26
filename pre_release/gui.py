@@ -74,7 +74,12 @@ class CameraTk(tk.Frame):
         self.grid_coords["x"] = x
         self.grid_coords["y"] = y
 
+    def set_size_video_capture(self, width, height):
+        self.width_video = width
+        self.height_video = height
+
     def resize_canvas(self, width, height):
+        self.set_size_video_capture(width, height)
         if self.video_capture:
             self.video_capture.set_frame_size(width, height)
         if self.canvas:
