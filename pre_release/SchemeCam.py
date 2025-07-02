@@ -12,7 +12,7 @@ def points(el):
     else:
         return el["XY"][0][:-1]
 
-class SchemesCams():
+class SchemeCam():
     def __init__(self):
         self.j = self.__open_json()
         self.scale = 18
@@ -155,7 +155,7 @@ class App(tk.Tk):
         super().__init__()
         self.title("Визуализация")
         self.bind("<Escape>", lambda event: self.destroy())
-        self.scheme = SchemesCams()
+        self.scheme = SchemeCam()
         self.mainloop()
 
 class CameraCanvas():

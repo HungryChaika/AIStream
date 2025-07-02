@@ -4,6 +4,8 @@ import ctypes
 from video_capture import MyVideoCapture
 import PIL.ImageTk
 from settings_local import SETTINGS as s
+from math import sqrt, ceil
+# from SchemeCam import SchemeCam as scheme
 
 
 from sys import platform
@@ -118,16 +120,21 @@ class CamerasFrame(tk.Frame):
             "get_source_names": self.get_source_names
         }
 
-    def spawn_cameras(self):
+    def spawn_cameras(self, del_all=False):
         width_cam, height_cam = self.get_camera_sizes()
         width, height = self.winfo_width(), self.winfo_height()
         grid = self.callbacks["get_current_grid"]()
+        if del_all:
+            for cam in self.cameras:
+                cam.grid_forget()
+            del self.cameras[:]
+        else:
+            index_delete = len(self.cameras) - 1
+            while index_delete >= grid * grid:
+                self.cameras[index_delete].grid_forget()
+                self.cameras.pop()
+                index_delete -= 1
         index_select = 0
-        index_delete = len(self.cameras) - 1
-        while index_delete >= grid * grid:
-            self.cameras[index_delete].grid_forget()
-            self.cameras.pop()
-            index_delete -= 1
         for i in range(grid):
             for j in range(grid):
                 index_select = i * grid + j
@@ -140,6 +147,12 @@ class CamerasFrame(tk.Frame):
                 cam.grid(row=i, column=j, sticky=tk.NSEW, padx=int(width*0.005), pady=int(height*0.005))
                 cam.set_grid_coords(j, i)
                 cam.configure(width=width_cam, height=height_cam)
+
+    def choice_all_stream(self):
+        count = 0
+        for name, _ in self.sources:
+            self.cameras[count].event_choice_of_stream(choice=name)
+            count += 1
 
     def all_cameras_resize_canvas(self):
         width, height = self.get_camera_sizes()
@@ -177,9 +190,9 @@ class CamerasFrame(tk.Frame):
     
     def get_source_names(self):
         return self.sources_names
-
-    def update_scene(self):
-        grid = self.callbacks["get_current_grid"]()
+    
+    def get_source_count(self):
+        return ceil(sqrt(len(self.sources)))
 
 
 class MenuFrame(tk.Frame):
@@ -219,10 +232,21 @@ class MenuFrame(tk.Frame):
 
         #Placement of the func buttons
         tk.Button(sub_frame_right, text="Новая камера", command=lambda: self.new_camera()).grid(row=0, column=2, ipadx=10, ipady=10, rowspan=2)
-        # tk.Button(sub_frame_right, text="Добавить все камеры", command=lambda: self.call_all_camera()).grid(row=0, column=2, ipadx=10, ipady=10, rowspan=2)
+
+        tk.Button(sub_frame_right, text="Режим ИИ", command=lambda: print()).grid(row=0, column=4, ipadx=10, ipady=10, rowspan=2)
+
+        tk.Button(sub_frame_right, text="Добавить все камеры", command=lambda: self.event_place_all_cameras()).grid(row=0, column=6, ipadx=10, ipady=10)
 
     def new_camera(self):
         pass
+
+    def event_place_all_cameras(self):
+        grid_size = self.callbacks["get_source_count"]()
+        self.selected_size_grid.set(grid_size)
+        self.callbacks["set_current_grid"](elem=grid_size)
+        self.callbacks["all_cameras_resize_canvas"]()
+        self.callbacks["spawn_cameras"](del_all=True)
+        self.callbacks["choice_all_stream"]()
 
     def event_grid_change(self, choice):
         self.selected_size_grid.set(choice)
@@ -252,12 +276,14 @@ class App(tk.Tk):
 
         self.callbacks_for_cameras = {
             "toggle_viewing_menu": self.toggle_viewing_menu,
-            "get_current_grid": self.get_current_grid
+            "get_current_grid": self.get_current_grid,
         }
         self.cameras_frame = CamerasFrame(window=self, sources=self.sources, callbacks=self.callbacks_for_cameras)
         self.cameras_frame.pack(expand=True, fill="both")
         self.menu_frame.adding_callback("spawn_cameras", self.cameras_frame.spawn_cameras)
         self.menu_frame.adding_callback("all_cameras_resize_canvas", self.cameras_frame.all_cameras_resize_canvas)
+        self.menu_frame.adding_callback("get_source_count", self.cameras_frame.get_source_count)
+        self.menu_frame.adding_callback("choice_all_stream", self.cameras_frame.choice_all_stream)
         self.cameras_frame.update()
         self.cameras_frame.spawn_cameras()
 
@@ -275,9 +301,9 @@ class App(tk.Tk):
 
     def on_closing(self, event=None):
         print('[Application] stoping threads')
-        for source in self.cameras_frame.cameras:
-            if source.video_capture:
-                source.video_capture.off()
+        for cam in self.cameras_frame.cameras:
+            if cam.video_capture:
+                cam.video_capture.off()
         print('[Application] exit')
         self.destroy()
 
