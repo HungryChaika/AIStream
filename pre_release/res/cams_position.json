@@ -1,0 +1,218 @@
+{
+    "FileData": {
+        "FormatVersion": 0,
+        "CreatingData": "Thu Aug 14 09:08:22 2025"
+    },
+    "NameBuilding": "",
+    "Address": {
+        "City": "",
+        "StreetAddress": ", ",
+        "AddInfo": ""
+    },
+    "Level": [
+        {
+            "NameLevel": "Floor number 03",
+            "ZLevel": 0.0,
+            "BuildElement": [
+                {
+                    "Name": "HallwayIGZ",
+                    "Id": "c9e89718-7db2-11f0-acc0-10ffe003ba2e",
+                    "Sign": "Camera",
+                    "AngleOfRotation": "313.3120078026828",
+                    "Location": "",
+                    "SizeZ": 0.0,
+                    "XY": [
+                        {
+                            "points": [
+                                {
+                                    "x": 0.39853594666064396,
+                                    "y": 7.975076626037087
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "WayAngleIGZ",
+                    "Id": "338b3a04-7db3-11f0-b58d-10ffe003ba2e",
+                    "Sign": "Camera",
+                    "AngleOfRotation": "90.52085637450196",
+                    "Location": "",
+                    "SizeZ": 0.0,
+                    "XY": [
+                        {
+                            "points": [
+                                {
+                                    "x": 28.954091502216194,
+                                    "y": 7.419521070481531
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "FireExitIGZ",
+                    "Id": "3c7dd534-7db3-11f0-ab9b-10ffe003ba2e",
+                    "Sign": "Camera",
+                    "AngleOfRotation": "91.6683374482933",
+                    "Location": "",
+                    "SizeZ": 0.0,
+                    "XY": [
+                        {
+                            "points": [
+                                {
+                                    "x": 29.00964705777175,
+                                    "y": 17.14174329270375
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "HallwayIMITIF",
+                    "Id": "46ad8eb9-7db3-11f0-b685-10ffe003ba2e",
+                    "Sign": "Camera",
+                    "AngleOfRotation": "134.0122396003602",
+                    "Location": "",
+                    "SizeZ": 0.0,
+                    "XY": [
+                        {
+                            "points": [
+                                {
+                                    "x": -12.879241831117135,
+                                    "y": 8.141743292703755
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "WayAngleIMITIF",
+                    "Id": "4e9203c8-7db3-11f0-9797-10ffe003ba2e",
+                    "Sign": "Camera",
+                    "AngleOfRotation": "358.0585136090856",
+                    "Location": "",
+                    "SizeZ": 0.0,
+                    "XY": [
+                        {
+                            "points": [
+                                {
+                                    "x": -41.21257516445047,
+                                    "y": 7.697298848259309
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "FireExitIMITIF",
+                    "Id": "58dd6ed0-7db3-11f0-b605-10ffe003ba2e",
+                    "Sign": "Camera",
+                    "AngleOfRotation": "357.1375947738883",
+                    "Location": "",
+                    "SizeZ": 0.0,
+                    "XY": [
+                        {
+                            "points": [
+                                {
+                                    "x": -41.71257516445047,
+                                    "y": 35.252854403814865
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "HallIMITIF",
+                    "Id": "6acfd1f2-7db3-11f0-91ce-10ffe003ba2e",
+                    "Sign": "Camera",
+                    "AngleOfRotation": "45.74892178282383",
+                    "Location": "",
+                    "SizeZ": 0.0,
+                    "XY": [
+                        {
+                            "points": [
+                                {
+                                    "x": -9.101464053339356,
+                                    "y": 7.141743292703754
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "HallIGZ",
+                    "Id": "735a0e37-7db3-11f0-b55c-10ffe003ba2e",
+                    "Sign": "Camera",
+                    "AngleOfRotation": "46.432096184164635",
+                    "Location": "",
+                    "SizeZ": 0.0,
+                    "XY": [
+                        {
+                            "points": [
+                                {
+                                    "x": -2.9903529422282418,
+                                    "y": 7.030632181592642
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "301a6k",
+                    "Id": "7de92ef1-7db3-11f0-b34e-10ffe003ba2e",
+                    "Sign": "Camera",
+                    "AngleOfRotation": "164.19748604606445",
+                    "Location": "",
+                    "SizeZ": 0.0,
+                    "XY": [
+                        {
+                            "points": [
+                                {
+                                    "x": 9.898535946660644,
+                                    "y": 14.141743292703753
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "323a6kWindow",
+                    "Id": "86b69035-7db3-11f0-9fd9-10ffe003ba2e",
+                    "Sign": "Camera",
+                    "AngleOfRotation": "138.11084065349075",
+                    "Location": "",
+                    "SizeZ": 0.0,
+                    "XY": [
+                        {
+                            "points": [
+                                {
+                                    "x": -28.212575164450467,
+                                    "y": 14.586187737148197
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Name": "323a6kWall",
+                    "Id": "8c490331-7db3-11f0-80a6-10ffe003ba2e",
+                    "Sign": "Camera",
+                    "AngleOfRotation": "315.0",
+                    "Location": "",
+                    "SizeZ": 0.0,
+                    "XY": [
+                        {
+                            "points": [
+                                {
+                                    "x": -33.65701960889491,
+                                    "y": 11.419521070481531
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
