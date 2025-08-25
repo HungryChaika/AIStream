@@ -19,7 +19,7 @@
                     "Id": "c9e89718-7db2-11f0-acc0-10ffe003ba2e",
                     "Sign": "Camera",
                     "AngleOfRotation": "313.3120078026828",
-                    "Location": "",
+                    "Adress": "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=3&subtype=1",
                     "SizeZ": 0.0,
                     "XY": [
                         {
@@ -37,7 +37,7 @@
                     "Id": "338b3a04-7db3-11f0-b58d-10ffe003ba2e",
                     "Sign": "Camera",
                     "AngleOfRotation": "90.52085637450196",
-                    "Location": "",
+                    "Adress": "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=4&subtype=1",
                     "SizeZ": 0.0,
                     "XY": [
                         {
@@ -55,7 +55,7 @@
                     "Id": "3c7dd534-7db3-11f0-ab9b-10ffe003ba2e",
                     "Sign": "Camera",
                     "AngleOfRotation": "91.6683374482933",
-                    "Location": "",
+                    "Adress": "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=10&subtype=1",
                     "SizeZ": 0.0,
                     "XY": [
                         {
@@ -73,7 +73,7 @@
                     "Id": "46ad8eb9-7db3-11f0-b685-10ffe003ba2e",
                     "Sign": "Camera",
                     "AngleOfRotation": "134.0122396003602",
-                    "Location": "",
+                    "Adress": "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=7&subtype=1",
                     "SizeZ": 0.0,
                     "XY": [
                         {
@@ -91,7 +91,7 @@
                     "Id": "4e9203c8-7db3-11f0-9797-10ffe003ba2e",
                     "Sign": "Camera",
                     "AngleOfRotation": "358.0585136090856",
-                    "Location": "",
+                    "Adress": "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=1&subtype=1",
                     "SizeZ": 0.0,
                     "XY": [
                         {
@@ -109,7 +109,7 @@
                     "Id": "58dd6ed0-7db3-11f0-b605-10ffe003ba2e",
                     "Sign": "Camera",
                     "AngleOfRotation": "357.1375947738883",
-                    "Location": "",
+                    "Adress": "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=5&subtype=1",
                     "SizeZ": 0.0,
                     "XY": [
                         {
@@ -127,7 +127,7 @@
                     "Id": "6acfd1f2-7db3-11f0-91ce-10ffe003ba2e",
                     "Sign": "Camera",
                     "AngleOfRotation": "45.74892178282383",
-                    "Location": "",
+                    "Adress": "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=8&subtype=1",
                     "SizeZ": 0.0,
                     "XY": [
                         {
@@ -145,7 +145,7 @@
                     "Id": "735a0e37-7db3-11f0-b55c-10ffe003ba2e",
                     "Sign": "Camera",
                     "AngleOfRotation": "46.432096184164635",
-                    "Location": "",
+                    "Adress": "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=6&subtype=1",
                     "SizeZ": 0.0,
                     "XY": [
                         {
@@ -163,7 +163,7 @@
                     "Id": "7de92ef1-7db3-11f0-b34e-10ffe003ba2e",
                     "Sign": "Camera",
                     "AngleOfRotation": "164.19748604606445",
-                    "Location": "",
+                    "Adress": "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=2&subtype=1",
                     "SizeZ": 0.0,
                     "XY": [
                         {
@@ -181,7 +181,7 @@
                     "Id": "86b69035-7db3-11f0-9fd9-10ffe003ba2e",
                     "Sign": "Camera",
                     "AngleOfRotation": "138.11084065349075",
-                    "Location": "",
+                    "Adress": "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=11&subtype=1",
                     "SizeZ": 0.0,
                     "XY": [
                         {
@@ -199,7 +199,7 @@
                     "Id": "8c490331-7db3-11f0-80a6-10ffe003ba2e",
                     "Sign": "Camera",
                     "AngleOfRotation": "315.0",
-                    "Location": "",
+                    "Adress": "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=12&subtype=1",
                     "SizeZ": 0.0,
                     "XY": [
                         {

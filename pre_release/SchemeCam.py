@@ -6,6 +6,8 @@ from pprint import pformat
 from os import path
 from math import atan2, degrees
 
+# "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=9&subtype=1"     street
+
 def points(el):
     if "points" in el["XY"][0]:
         return [(xy["x"], xy["y"]) for xy in el["XY"][0]["points"]]
@@ -22,7 +24,6 @@ class SchemeCam():
         self.canvas_cams = []   # пары canvas-камеры
         self.min_x, self.min_y, self.max_x, self.max_y = self.__calc_max_min()
         self.offset_x, self.offset_y = -self.min_x, -self.min_y
-        self.__process()
 
     def __open_json(self, name):
         ''' Открытие json, имеющиего информацию наблюдаемой территории '''
@@ -110,25 +111,25 @@ class SchemeCam():
         frame.pack(expand=True, fill="both", anchor="center")
         label_name = tk.Label(frame, text="Введите название:")
         entry_name = tk.Entry(frame)
-        label_address = tk.Label(frame, text="Введите место установки:")
-        entry_location = tk.Entry(frame)
+        label_address = tk.Label(frame, text="Введите адрес для подключения:")
+        entry_adress = tk.Entry(frame)
         label_name.pack()
         entry_name.pack()
         label_address.pack()
-        entry_location.pack()
-        tk.Button(frame, text="Ввод", command=lambda entry_name = entry_name, entry_location = entry_location, 
-                  data = data, top = top : self.__event_data_filling(entry_name, entry_location, data, top)).pack()
+        entry_adress.pack()
+        tk.Button(frame, text="Ввод", command=lambda entry_name = entry_name, entry_adress = entry_adress, 
+                  data = data, top = top : self.__event_data_filling(entry_name, entry_adress, data, top)).pack()
 
-    def __event_data_filling(self, entry_name, entry_location, data, top):
+    def __event_data_filling(self, entry_name, entry_adress, data, top):
         if(entry_name.get()):
             data["Name"] = entry_name.get()
-            data["Location"] = entry_location.get()
+            data["Adress"] = entry_adress.get()
             top.destroy()
             name_f = "cams_position"
             for lvl in self.j_cam["Level"]:
                 if lvl["ZLevel"] == data["FloorLevel"] and lvl["NameLevel"] == data["NameLevel"]:
                     lvl["BuildElement"].append(
-                        { "Name": data["Name"], "Id": f"{uuid.uuid1()}", "Sign": "Camera", "AngleOfRotation": data["AngleOfRotation"], "Location": data["Location"], "SizeZ": 0.0, "XY": [{ "points": [{ "x": data["CenterX"], "y": data["CenterY"] }] }] }
+                        { "Name": data["Name"], "Id": f"{uuid.uuid1()}", "Sign": "Camera", "AngleOfRotation": data["AngleOfRotation"], "Adress": data["Adress"], "SizeZ": 0.0, "XY": [{ "points": [{ "x": data["CenterX"], "y": data["CenterY"] }] }] }
                     )
                 break
             with open(path.join(rf"{path.dirname(__file__)}/res/", f"{name_f}.json"), "w") as json_file:
@@ -168,7 +169,7 @@ class SchemeCam():
             canvas.itemconfig(camera.camera, fill=fill)
             canvas.itemconfig(camera.field_of_view, fill=fill)  
 
-    def __process(self):
+    def process(self):
         ''' Отрисовка схемы территории '''
         # Tkinter окно для каждого этажа
         for lvl in self.j["Level"]:
@@ -200,13 +201,13 @@ class SchemeCam():
             # self.__create_camera(canvas, lvl["NameLevel"], lvl["ZLevel"])
             self.__place_all_cameras(canvas, lvl["NameLevel"], lvl["ZLevel"])             
 
-class App(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.title("Визуализация")
-        self.bind("<Escape>", lambda event: self.destroy())
-        self.scheme = SchemeCam()
-        self.mainloop()
+# class App(tk.Tk):
+#     def __init__(self):
+#         super().__init__()
+#         self.title("Визуализация")
+#         self.bind("<Escape>", lambda event: self.destroy())
+#         self.scheme = SchemeCam()
+#         self.mainloop()
 
 class CameraCanvas():
     def __init__(self, camera, field_of_view = None, camera_radius = None, field_of_view_radius = None, name_level = None, floor_level = None):
@@ -245,10 +246,4 @@ class CameraCanvas():
         if self.field_of_view:
             canvas.delete(self.field_of_view)
 
-app = App()
-
-
-#     # def cntr(el):
-#     #     ''' Центр для canvas по координатам здания '''
-#     #     xy = [crd(x, y) for x, y in points(el)]
-#     #     return sum((x for x, y in xy))/len(xy), sum((y for x, y in xy))/len(xy)
+# app = App()
