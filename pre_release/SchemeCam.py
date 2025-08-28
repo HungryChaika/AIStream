@@ -4,7 +4,7 @@ import json
 import uuid
 from pprint import pformat
 from os import path
-from math import atan2, degrees
+from math import atan2, degrees, sqrt, ceil
 
 # "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=9&subtype=1"     street
 
@@ -22,6 +22,7 @@ class SchemeCam():
         self.cameras = {}
         self.canvas_floor = []  # пары этаж-canvas
         self.canvas_cams = []   # пары canvas-камеры
+        self.tops_list = []     # список окон
         self.min_x, self.min_y, self.max_x, self.max_y = self.__calc_max_min()
         self.offset_x, self.offset_y = -self.min_x, -self.min_y
 
@@ -112,24 +113,24 @@ class SchemeCam():
         label_name = tk.Label(frame, text="Введите название:")
         entry_name = tk.Entry(frame)
         label_address = tk.Label(frame, text="Введите адрес для подключения:")
-        entry_adress = tk.Entry(frame)
+        entry_address = tk.Entry(frame)
         label_name.pack()
         entry_name.pack()
         label_address.pack()
-        entry_adress.pack()
-        tk.Button(frame, text="Ввод", command=lambda entry_name = entry_name, entry_adress = entry_adress, 
-                  data = data, top = top : self.__event_data_filling(entry_name, entry_adress, data, top)).pack()
+        entry_address.pack()
+        tk.Button(frame, text="Ввод", command=lambda entry_name = entry_name, entry_address = entry_address, 
+                  data = data, top = top : self.__event_data_filling(entry_name, entry_address, data, top)).pack()
 
-    def __event_data_filling(self, entry_name, entry_adress, data, top):
+    def __event_data_filling(self, entry_name, entry_address, data, top):
         if(entry_name.get()):
             data["Name"] = entry_name.get()
-            data["Adress"] = entry_adress.get()
+            data["Address"] = entry_address.get()
             top.destroy()
             name_f = "cams_position"
             for lvl in self.j_cam["Level"]:
                 if lvl["ZLevel"] == data["FloorLevel"] and lvl["NameLevel"] == data["NameLevel"]:
                     lvl["BuildElement"].append(
-                        { "Name": data["Name"], "Id": f"{uuid.uuid1()}", "Sign": "Camera", "AngleOfRotation": data["AngleOfRotation"], "Adress": data["Adress"], "SizeZ": 0.0, "XY": [{ "points": [{ "x": data["CenterX"], "y": data["CenterY"] }] }] }
+                        { "Name": data["Name"], "Id": f"{uuid.uuid1()}", "Sign": "Camera", "AngleOfRotation": data["AngleOfRotation"], "Address": data["Address"], "SizeZ": 0.0, "XY": [{ "points": [{ "x": data["CenterX"], "y": data["CenterY"] }] }] }
                     )
                 break
             with open(path.join(rf"{path.dirname(__file__)}/res/", f"{name_f}.json"), "w") as json_file:
@@ -139,8 +140,7 @@ class SchemeCam():
         camera.destroy(canvas)
         self.__create_camera(canvas, name_level, floor_level)
 
-    def __place_all_cameras(self, canvas, name_level, floor_level):
-        name_f = "cams_position"
+    def __place_all_cameras(self, canvas, name_level, floor_level, callback):
         camera_radius = min(self.max_x * 0.05 * self.scale / 2, self.max_y * 0.05 * self.scale / 2)
         for lvl in self.j_cam["Level"]:
             if lvl["ZLevel"] == floor_level and lvl["NameLevel"] == name_level:
@@ -161,15 +161,34 @@ class SchemeCam():
                             floor_level = floor_level, name_level = name_level)
                     canvas.tag_bind(camera.camera, "<Enter>", lambda event, camera=camera: change_color(event, camera, canvas, fill="#0000FF"))
                     canvas.tag_bind(camera.camera, "<Leave>", lambda event, camera=camera: change_color(event, camera, canvas, fill="#00FF00"))
-                    canvas.tag_bind(camera.field_of_view, "<Enter>", lambda event, camera=camera: change_color(event, camera, canvas, fill="#0000FF"))
-                    canvas.tag_bind(camera.field_of_view, "<Leave>", lambda event, camera=camera: change_color(event, camera, canvas, fill="#00FF00"))
+                    canvas.tag_bind(camera.field_of_view, "<Enter>", lambda event, camera=camera: change_color(camera, canvas, fill="#0000FF"))
+                    canvas.tag_bind(camera.field_of_view, "<Leave>", lambda event, camera=camera: change_color(camera, canvas, fill="#00FF00"))
+                    canvas.tag_bind(camera.camera, "<Button-1>", lambda event, address=el["Address"], tops_list=self.tops_list, callback=callback: cam_click(tops_list=tops_list, address=address, callback=callback))
+                    canvas.tag_bind(camera.field_of_view, "<Button-1>", lambda event, address=el["Address"], tops_list=self.tops_list, callback=callback: cam_click(tops_list=tops_list, address=address, callback=callback))
                     self.canvas_cams.append((canvas, camera))
 
-        def change_color(event, camera, canvas, fill):
+        def change_color(camera, canvas, fill):
             canvas.itemconfig(camera.camera, fill=fill)
-            canvas.itemconfig(camera.field_of_view, fill=fill)  
+            canvas.itemconfig(camera.field_of_view, fill=fill)
 
-    def process(self):
+        def cam_click(tops_list, address, callback):
+            callback(choice=address, isAddress=True)
+            [elem.destroy() for elem in tops_list]#!!! Узнать возможность сокрытия окна без удаления. (А МОЖЕТ И НЕТ)
+
+    def get_sources_names(self):
+        return [el["Name"] for lvl in self.j_cam["Level"] for el in lvl["BuildElement"]]
+    
+    def get_sources_address_using_name(self, name):
+        for lvl in self.j_cam["Level"]:
+            for el in lvl["BuildElement"]:
+                if el["Name"] == name:
+                    return el["Address"]
+                
+    def get_sources_count(self):
+        for lvl in self.j_cam["Level"]:
+            return ceil(sqrt(len(lvl["BuildElement"])))
+
+    def process(self, callback):
         ''' Отрисовка схемы территории '''
         # Tkinter окно для каждого этажа
         for lvl in self.j["Level"]:
@@ -192,6 +211,7 @@ class SchemeCam():
             except tk.TclError:
                 top.wm_state("zoomed")
             self.canvas_floor.append((lvl, canvas))
+            self.tops_list.append(top)
         # Рисуем фон
         colors = {"Room": "", "DoorWayInt": "yellow", "DoorWayOut": "brown", "DoorWay": "", "Staircase": "green"}
         for lvl, canvas in self.canvas_floor:
@@ -199,7 +219,7 @@ class SchemeCam():
                 polygon = canvas.create_polygon([self.__crd(x, y) for x, y in points(el)], fill=colors[el['Sign']], outline='black')
                 # canvas.tag_bind(polygon, "<Button-1>", lambda e, el=el: tk.messagebox.showinfo("Инфо об объекте", pformat(el, compact=True, depth=5)))
             # self.__create_camera(canvas, lvl["NameLevel"], lvl["ZLevel"])
-            self.__place_all_cameras(canvas, lvl["NameLevel"], lvl["ZLevel"])             
+            self.__place_all_cameras(canvas, lvl["NameLevel"], lvl["ZLevel"], callback)             
 
 # class App(tk.Tk):
 #     def __init__(self):

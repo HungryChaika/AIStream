@@ -4,8 +4,7 @@ import ctypes
 from video_capture import MyVideoCapture
 import PIL.ImageTk
 from settings_local import SETTINGS as s
-from math import sqrt, ceil
-# from SchemeCam import SchemeCam as scheme
+from SchemeCam import SchemeCam as Scheme
 
 
 from sys import platform
@@ -14,7 +13,7 @@ if platform == "win32":
 
 
 class CameraTk(tk.Frame):
-    def __init__(self, window, text=None, stream=None, callbacks = {}, width = 100, height = 100):
+    def __init__(self, window, text=None, stream=None, callbacks = {}, width = 100, height = 100, event_to_open_cam = None):
         super().__init__(window, padx=5, pady=5, width=width, height=height, highlightbackground="#000000", highlightthickness=2)
         self.window = window
         self.stream = stream
@@ -33,15 +32,19 @@ class CameraTk(tk.Frame):
             "x": None,
             "y": None
         }
-
-        # self.button_choice_of_stream = tk.Button(master=self, text="Выбор\nкамеры", command=lambda: self.event_choice_of_stream())
-        # self.button_choice_of_stream.place(x=0, y=0, relx=0.5, rely=0.5, anchor="center")
-        self.option_menu = tk.OptionMenu(self, self.selected_name_cam, *self.callbacks["get_source_names"](), command=lambda choice: self.event_choice_of_stream(choice))
+        self.option_menu = None
+        if event_to_open_cam:
+            self.option_menu = tk.Button(self, text="Выбор\nкамеры", command=lambda: event_to_open_cam(callback=self.event_choice_of_stream))
+        else:
+            self.option_menu = tk.OptionMenu(self, self.selected_name_cam, *self.callbacks["get_source_names"](), command=lambda choice: self.event_choice_of_stream(choice))
         self.option_menu.place(x=0, y=0, relx=0.5, rely=0.5, anchor="center")
 
-    # def event_choice_of_stream(self, event):
-    def event_choice_of_stream(self, choice):
-        address = self.callbacks["get_source_address"](choice)
+    def event_choice_of_stream(self, choice, isAddress=False):
+        address = None
+        if isAddress:
+            address = choice
+        else:
+            address = self.callbacks["get_source_address"](choice)
         self.option_menu.place_forget()
         self.label = tk.Label(self, text=choice)
         self.label.pack()
@@ -96,16 +99,17 @@ class CameraTk(tk.Frame):
         
         if self.running:
             self.window.after(self.delay, self.update_frame)
-        
+
 
 class CamerasFrame(tk.Frame):
-    def __init__(self, window, sources, callbacks = {}):
+    def __init__(self, window, callbacks = {}):
         super().__init__(window)
-        self.sources = None
-        self.sources_names = None
-        if sources:
-            self.sources = sources
-            self.sources_names = [name for name, _ in self.sources]
+        # self.sources = None
+        self.scheme = Scheme()
+        self.sources_names = self.scheme.get_sources_names()
+        # if sources:
+        #     self.sources = sources
+        #     self.sources_names = [name for name, _ in self.sources]
         self.callbacks = callbacks
         self.cameras = []
         self.sub_frame = tk.Frame(self)
@@ -142,7 +146,8 @@ class CamerasFrame(tk.Frame):
                 try:
                     cam = self.cameras[index_select]
                 except:
-                    cam = CameraTk(window=self.sub_frame, callbacks=self.callbacks_for_cameras, width=width_cam, height=height_cam)
+                    cam = CameraTk(window=self.sub_frame, callbacks=self.callbacks_for_cameras, 
+                                   width=width_cam, height=height_cam, event_to_open_cam=self.scheme.process)
                     self.cameras.append(cam)
                 cam.grid(row=i, column=j, sticky=tk.NSEW, padx=int(width*0.005), pady=int(height*0.005))
                 cam.set_grid_coords(j, i)
@@ -150,7 +155,7 @@ class CamerasFrame(tk.Frame):
 
     def choice_all_stream(self):
         count = 0
-        for name, _ in self.sources:
+        for name in self.sources_names:
             self.cameras[count].event_choice_of_stream(choice=name)
             count += 1
 
@@ -184,15 +189,13 @@ class CamerasFrame(tk.Frame):
         return self.winfo_width(), self.winfo_height()
     
     def get_source_address(self, source_name):
-        for name, address in self.sources:
-            if name == source_name:
-                return address
+        return self.scheme.get_sources_address_using_name(source_name)
     
     def get_source_names(self):
         return self.sources_names
     
-    def get_source_count(self):
-        return ceil(sqrt(len(self.sources)))
+    def get_sources_count(self):
+        return self.scheme.get_sources_count()
 
 
 class MenuFrame(tk.Frame):
@@ -241,7 +244,7 @@ class MenuFrame(tk.Frame):
         pass
 
     def event_place_all_cameras(self):
-        grid_size = self.callbacks["get_source_count"]()
+        grid_size = self.callbacks["get_sources_count"]()
         self.selected_size_grid.set(grid_size)
         self.callbacks["set_current_grid"](elem=grid_size)
         self.callbacks["all_cameras_resize_canvas"]()
@@ -259,9 +262,9 @@ class MenuFrame(tk.Frame):
             self.callbacks[name] = func
 
 class App(tk.Tk):
-    def __init__(self, sources=None):
+    def __init__(self):
         super().__init__()
-        self.sources = sources
+        # self.sources = sources
         self.attributes("-fullscreen", True)
         self.bind(s["screen_resize"], lambda event: self.iconify())
         self.bind(s["exit_Button"], lambda event: self.on_closing())
@@ -278,11 +281,11 @@ class App(tk.Tk):
             "toggle_viewing_menu": self.toggle_viewing_menu,
             "get_current_grid": self.get_current_grid,
         }
-        self.cameras_frame = CamerasFrame(window=self, sources=self.sources, callbacks=self.callbacks_for_cameras)
+        self.cameras_frame = CamerasFrame(window=self, callbacks=self.callbacks_for_cameras)
         self.cameras_frame.pack(expand=True, fill="both")
         self.menu_frame.adding_callback("spawn_cameras", self.cameras_frame.spawn_cameras)
         self.menu_frame.adding_callback("all_cameras_resize_canvas", self.cameras_frame.all_cameras_resize_canvas)
-        self.menu_frame.adding_callback("get_source_count", self.cameras_frame.get_source_count)
+        self.menu_frame.adding_callback("get_sources_count", self.cameras_frame.get_sources_count)
         self.menu_frame.adding_callback("choice_all_stream", self.cameras_frame.choice_all_stream)
         self.cameras_frame.update()
         self.cameras_frame.spawn_cameras()
@@ -308,20 +311,20 @@ class App(tk.Tk):
         self.destroy()
 
 
-sources = [
-        ('hallway_igz',         "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["hallway_igz"],      s["stream_type"]["sub_stream"])),
-        ('fire_exit_imitif',    "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["fire_exit_imitif"], s["stream_type"]["sub_stream"])),
-        ('angle_imitif',        "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["angle_imitif"],     s["stream_type"]["sub_stream"])),
-        ('hallway_imitif',      "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["hallway_imitif"],   s["stream_type"]["sub_stream"])),
-        ('hall_imitif',         "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["hall_imitif"],      s["stream_type"]["sub_stream"])),
-        ('street',              "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["street"],           s["stream_type"]["sub_stream"])),
-        ('hall_igz',            "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["hall_igz"],         s["stream_type"]["sub_stream"])),
-        ('angle_igz',           "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["angle_igz"],        s["stream_type"]["sub_stream"])),
-        ('fire_exit_igz',       "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["fire_exit_igz"],    s["stream_type"]["sub_stream"])),
-        ('301_6k',              "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["301_6k"],           s["stream_type"]["sub_stream"])),
-        ('323_6k_window',       "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["323_6k_window"],    s["stream_type"]["sub_stream"])),
-        ('323_6k_door',         "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["323_6k_door"],      s["stream_type"]["sub_stream"]))
-]
+# sources = [
+#         ('hallway_igz',         "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["hallway_igz"],      s["stream_type"]["sub_stream"])),
+#         ('fire_exit_imitif',    "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["fire_exit_imitif"], s["stream_type"]["sub_stream"])),
+#         ('angle_imitif',        "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["angle_imitif"],     s["stream_type"]["sub_stream"])),
+#         ('hallway_imitif',      "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["hallway_imitif"],   s["stream_type"]["sub_stream"])),
+#         ('hall_imitif',         "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["hall_imitif"],      s["stream_type"]["sub_stream"])),
+#         ('street',              "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["street"],           s["stream_type"]["sub_stream"])),
+#         ('hall_igz',            "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["hall_igz"],         s["stream_type"]["sub_stream"])),
+#         ('angle_igz',           "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["angle_igz"],        s["stream_type"]["sub_stream"])),
+#         ('fire_exit_igz',       "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["fire_exit_igz"],    s["stream_type"]["sub_stream"])),
+#         ('301_6k',              "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["301_6k"],           s["stream_type"]["sub_stream"])),
+#         ('323_6k_window',       "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["323_6k_window"],    s["stream_type"]["sub_stream"])),
+#         ('323_6k_door',         "rtsp://{}:{}@{}:{}/cam/realmonitor?channel={}&subtype={}".format(s["log"], s["pass"], s["ip_address_netreg"], s["port"], s["stream_channel"]["323_6k_door"],      s["stream_type"]["sub_stream"]))
+# ]
 
 if __name__ == "__main__":
-    application = App(sources=sources)
+    application = App()
