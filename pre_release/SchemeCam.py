@@ -6,7 +6,6 @@ from pprint import pformat
 from os import path
 from math import atan2, degrees, sqrt, ceil
 
-# "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=9&subtype=1"     street
 
 def points(el):
     if "points" in el["XY"][0]:
@@ -19,7 +18,6 @@ class SchemeCam():
         self.j = self.__open_json("6k3f")
         self.j_cam = self.__open_json("cams_position")
         self.scale = 18
-        self.cameras = {}
         self.canvas_floor = []  # пары этаж-canvas
         self.canvas_cams = []   # пары canvas-камеры
         self.tops_list = []     # список окон
@@ -159,24 +157,33 @@ class SchemeCam():
                                     (camera_center["x"] + camera_radius * 2, camera_center["y"] + camera_radius * 2), 
                                     fill = "#00FF00", outline = "#000000", start = el["AngleOfRotation"]), 
                             floor_level = floor_level, name_level = name_level)
-                    canvas.tag_bind(camera.camera, "<Enter>", lambda event, camera=camera: change_color(event, camera, canvas, fill="#0000FF"))
-                    canvas.tag_bind(camera.camera, "<Leave>", lambda event, camera=camera: change_color(event, camera, canvas, fill="#00FF00"))
+                    canvas.tag_bind(camera.camera, "<Enter>", lambda event, camera=camera: change_color(camera, canvas, fill="#0000FF"))
+                    canvas.tag_bind(camera.camera, "<Leave>", lambda event, camera=camera: change_color(camera, canvas, fill="#00FF00"))
                     canvas.tag_bind(camera.field_of_view, "<Enter>", lambda event, camera=camera: change_color(camera, canvas, fill="#0000FF"))
                     canvas.tag_bind(camera.field_of_view, "<Leave>", lambda event, camera=camera: change_color(camera, canvas, fill="#00FF00"))
-                    canvas.tag_bind(camera.camera, "<Button-1>", lambda event, address=el["Address"], tops_list=self.tops_list, callback=callback: cam_click(tops_list=tops_list, address=address, callback=callback))
-                    canvas.tag_bind(camera.field_of_view, "<Button-1>", lambda event, address=el["Address"], tops_list=self.tops_list, callback=callback: cam_click(tops_list=tops_list, address=address, callback=callback))
+                    canvas.tag_bind(camera.camera, "<Button-1>", lambda event, address=el["Address"], name=el["Name"], schemeSelf=self, 
+                                    callback=callback: cam_click(schemeSelf=schemeSelf, address=address, name=name, callback=callback))
+                    canvas.tag_bind(camera.field_of_view, "<Button-1>", lambda event, address=el["Address"], name=el["Name"], schemeSelf=self, 
+                                    callback=callback: cam_click(schemeSelf=schemeSelf, address=address, name=name, callback=callback))
                     self.canvas_cams.append((canvas, camera))
 
         def change_color(camera, canvas, fill):
             canvas.itemconfig(camera.camera, fill=fill)
             canvas.itemconfig(camera.field_of_view, fill=fill)
 
-        def cam_click(tops_list, address, callback):
-            callback(choice=address, isAddress=True)
-            [elem.destroy() for elem in tops_list]#!!! Узнать возможность сокрытия окна без удаления. (А МОЖЕТ И НЕТ)
+        def cam_click(schemeSelf, address, name, callback):
+            callback(choice=address, name=name, isAddress=True)
+            for elem in schemeSelf.tops_list:
+                elem.destroy()
+            schemeSelf.tops_list = []
+            schemeSelf.canvas_floor = []
+            schemeSelf.canvas_floor = []
 
     def get_sources_names(self):
         return [el["Name"] for lvl in self.j_cam["Level"] for el in lvl["BuildElement"]]
+    
+    def get_sources_address_and_names(self):
+        return [(el["Address"], el["Name"]) for lvl in self.j_cam["Level"] for el in lvl["BuildElement"]]
     
     def get_sources_address_using_name(self, name):
         for lvl in self.j_cam["Level"]:
@@ -188,7 +195,7 @@ class SchemeCam():
         for lvl in self.j_cam["Level"]:
             return ceil(sqrt(len(lvl["BuildElement"])))
 
-    def process(self, callback):
+    def process(self, callback = lambda:None, isNewCam = False):
         ''' Отрисовка схемы территории '''
         # Tkinter окно для каждого этажа
         for lvl in self.j["Level"]:
@@ -218,16 +225,10 @@ class SchemeCam():
             for el in lvl['BuildElement']:
                 polygon = canvas.create_polygon([self.__crd(x, y) for x, y in points(el)], fill=colors[el['Sign']], outline='black')
                 # canvas.tag_bind(polygon, "<Button-1>", lambda e, el=el: tk.messagebox.showinfo("Инфо об объекте", pformat(el, compact=True, depth=5)))
-            # self.__create_camera(canvas, lvl["NameLevel"], lvl["ZLevel"])
-            self.__place_all_cameras(canvas, lvl["NameLevel"], lvl["ZLevel"], callback)             
-
-# class App(tk.Tk):
-#     def __init__(self):
-#         super().__init__()
-#         self.title("Визуализация")
-#         self.bind("<Escape>", lambda event: self.destroy())
-#         self.scheme = SchemeCam()
-#         self.mainloop()
+            if isNewCam:
+                self.__create_camera(canvas, lvl["NameLevel"], lvl["ZLevel"])
+            else:
+                self.__place_all_cameras(canvas, lvl["NameLevel"], lvl["ZLevel"], callback)
 
 class CameraCanvas():
     def __init__(self, camera, field_of_view = None, camera_radius = None, field_of_view_radius = None, name_level = None, floor_level = None):
@@ -265,5 +266,3 @@ class CameraCanvas():
             canvas.delete(self.camera)
         if self.field_of_view:
             canvas.delete(self.field_of_view)
-
-# app = App()

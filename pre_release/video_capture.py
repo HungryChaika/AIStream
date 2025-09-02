@@ -66,7 +66,6 @@ class MyVideoCapture:
                     frame = PIL.Image.fromarray(frame)
             else:
                 print('[MyVideoCapture] stream end:', self.video_source)
-                # TODO: reopen stream
                 self.running = False
                 if self.recording:
                     self.stop_recording()

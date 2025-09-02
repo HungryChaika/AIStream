@@ -211,6 +211,24 @@
                             ]
                         }
                     ]
+                },
+                {
+                    "Name": "street",
+                    "Id": "04da5fb9-8804-11f0-be52-10ffe003ba2e",
+                    "Sign": "Camera",
+                    "AngleOfRotation": "233.13010235415598",
+                    "Address": "rtsp://admin:Qwerty123@192.168.1.72:554/cam/realmonitor?channel=9&subtype=1",
+                    "SizeZ": 0.0,
+                    "XY": [
+                        {
+                            "points": [
+                                {
+                                    "x": -10.434797386672692,
+                                    "y": 1.4195210704815313
+                                }
+                            ]
+                        }
+                    ]
                 }
             ]
         }
