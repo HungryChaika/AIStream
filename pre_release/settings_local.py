@@ -34,7 +34,7 @@ SETTINGS = {
     'save_img': "False",
     'exist_ok': "False",
 
-    'classes': None,
+    'classes': [0],
 
     'line_thickness': 2,
     'track_thickness': 2,

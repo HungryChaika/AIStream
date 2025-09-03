@@ -2,6 +2,7 @@ import cv2
 import PIL.Image, PIL.ImageTk
 import time
 import threading
+from YOLO import AiDetection
 
 class MyVideoCapture:
     def __init__(self, video_source=0, width=None, height=None, fps=None):
@@ -10,6 +11,8 @@ class MyVideoCapture:
         self.height = height
         self.fps = fps
         self.vid = cv2.VideoCapture(video_source)
+        self.detection = AiDetection()
+        self.isDetect = True
         if not self.vid.isOpened():
             raise ValueError("[MyVideoCapture] Unable to open video source", video_source)
         if not self.width:
@@ -54,6 +57,9 @@ class MyVideoCapture:
         if self.recording_writer and self.recording_writer.isOpened():
             self.recording_writer.write(frame)
  
+    def changeDetectMode(self):
+        self.isDetect = not self.isDetect
+
     def process(self):
         while self.running:
             ret, frame = self.vid.read()
@@ -63,6 +69,8 @@ class MyVideoCapture:
                     self.record(frame)
                 if self.convert_pillow:
                     frame = cv2.cvtColor(frame, self.convert_color)
+                    if self.isDetect:
+                        frame = self.detection.detect(frame)
                     frame = PIL.Image.fromarray(frame)
             else:
                 print('[MyVideoCapture] stream end:', self.video_source)
